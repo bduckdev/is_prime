@@ -1,3 +1,4 @@
+// counting prime numbers with vs without concurrency
 package main
 
 import (
@@ -21,6 +22,7 @@ func main() {
 
 	primeCount = 0
 	start = time.Now()
+	// fill jobs channel
 	go func() {
 		for i := 0; i < NUM_ITERATIONS; i++ {
 			jobs <- i
@@ -28,6 +30,7 @@ func main() {
 		close(jobs)
 	}()
 
+	// create wait group and queue up worker routines
 	var wg sync.WaitGroup
 	W := runtime.NumCPU()
 	wg.Add(W)
@@ -35,11 +38,13 @@ func main() {
 		go worker(jobs, res, &wg)
 	}
 
+	// close the res channel down here
 	go func() {
 		wg.Wait()
 		close(res)
 	}()
 
+	// tally up the primes based on the bools in the res channel
 	for b := range res {
 		if b {
 			primeCount++
